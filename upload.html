@@ -234,6 +234,12 @@
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 25px;
+            display: none;
+            /* Oculto por defecto */
+        }
+
+        .config-section.show {
+            display: block;
         }
 
         .config-title {
@@ -324,10 +330,33 @@
 
         let selectedFile = null;
 
-        // Load saved token
-        const savedToken = localStorage.getItem('github_token');
-        if (savedToken) {
-            githubToken.value = savedToken;
+        // Get token from URL param, localStorage, or show config
+        function getToken() {
+            // Check URL param first (for private link)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('t');
+            if (urlToken) {
+                localStorage.setItem('github_token', urlToken);
+                // Clean URL to hide token
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return urlToken;
+            }
+
+            // Check localStorage
+            const savedToken = localStorage.getItem('github_token');
+            if (savedToken) {
+                return savedToken;
+            }
+
+            // No token found, show config section
+            document.querySelector('.config-section').classList.add('show');
+            return null;
+        }
+
+        // Initialize token
+        const initialToken = getToken();
+        if (initialToken) {
+            githubToken.value = initialToken;
         }
 
         // Save token on change
