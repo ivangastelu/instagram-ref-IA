@@ -215,6 +215,56 @@
             z-index: 1001;
         }
 
+        /* Navigation Buttons */
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(233, 69, 96, 0.8);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-button:hover {
+            background: #e94560;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-button.prev {
+            left: 20px;
+        }
+
+        .nav-button.next {
+            right: 20px;
+        }
+
+        .nav-button::before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+        }
+
+        .nav-button.prev::before {
+            border-right: 16px solid #fff;
+            margin-right: 4px;
+        }
+
+        .nav-button.next::before {
+            border-left: 16px solid #fff;
+            margin-left: 4px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             h1 {
@@ -228,12 +278,25 @@
             .modal-content {
                 padding: 50px 10px;
             }
+
+            .nav-button {
+                width: 45px;
+                height: 45px;
+            }
+
+            .nav-button.prev {
+                left: 10px;
+            }
+
+            .nav-button.next {
+                right: 10px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>🎬 Galería de <span>Videos</span></h1>
+    <!-- <h1>🎬 Galería de <span>Videos</span></h1> -->
 
     <div class="video-grid" id="videoGrid">
         <!-- Videos will be loaded here -->
@@ -242,6 +305,8 @@
     <!-- Modal -->
     <div class="modal-overlay" id="modalOverlay">
         <button class="close-button" id="closeButton" aria-label="Cerrar"></button>
+        <button class="nav-button prev" id="prevButton" aria-label="Video anterior"></button>
+        <button class="nav-button next" id="nextButton" aria-label="Video siguiente"></button>
         <div class="modal-content" id="modalContent">
             <video class="modal-video" id="modalVideo" controls></video>
         </div>
@@ -348,10 +413,50 @@
             }
         });
 
-        // Close with Escape key
+        // Navigation buttons
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        function goToPrevVideo() {
+            // Carrusel infinito: si estamos en el primero, vamos al último
+            currentVideoIndex = (currentVideoIndex - 1 + videos.length) % videos.length;
+            loadVideo(currentVideoIndex);
+        }
+
+        function goToNextVideo() {
+            // Carrusel infinito: si estamos en el último, vamos al primero
+            currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+            loadVideo(currentVideoIndex);
+        }
+
+        function loadVideo(index) {
+            const video = videos[index];
+            modalVideo.pause();
+            modalVideo.src = `videos/${encodeURIComponent(video.name)}`;
+            videoCounter.textContent = `Video ${index + 1} de ${videos.length}`;
+            modalVideo.play().catch(() => { });
+        }
+
+        prevButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goToPrevVideo();
+        });
+
+        nextButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goToNextVideo();
+        });
+
+        // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+            if (!modalOverlay.classList.contains('active')) return;
+
+            if (e.key === 'Escape') {
                 closeModal();
+            } else if (e.key === 'ArrowLeft') {
+                goToPrevVideo();
+            } else if (e.key === 'ArrowRight') {
+                goToNextVideo();
             }
         });
 
